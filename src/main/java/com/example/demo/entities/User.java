@@ -44,7 +44,7 @@ public class User implements UserDetails {
     @Column(name = "profile_picture_url", length = 500)
     private String profilePictureUrl;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

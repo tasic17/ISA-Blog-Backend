@@ -8,8 +8,10 @@ import com.example.demo.mappers.UserMapper;
 import com.example.demo.models.JwtAuthenticationModel;
 import com.example.demo.models.UserSignInModel;
 import com.example.demo.models.UserSignUpModel;
+import com.example.demo.repositories.IRoleRepository;
 import com.example.demo.repositories.IUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,16 +24,21 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final IUserRepository userRepository;
+    private final IRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Transactional
     public JwtAuthenticationModel signUp(UserSignUpModel input) {
+        log.debug("Starting user registration process for email: {}", input.getEmail());
+        
         if (userRepository.existsByEmail(input.getEmail())) {
+            log.warn("Registration failed: Email already exists - {}", input.getEmail());
             throw new ValidationException("Email already exists");
         }
 
@@ -41,15 +48,23 @@ public class AuthenticationService {
         user.setEmail(input.getEmail());
         user.setContactNumber(input.getContactNumber());
         user.setPassword(passwordEncoder.encode(input.getPassword()));
-
-        // Dodeli READER rolu po defaultu
-        Role readerRole = new Role();
-        readerRole.setId(1); // READER role ID
-        readerRole.setName("READER");
         user.setRoles(new ArrayList<>());
+
+        // Find the READER role from the database instead of creating a new instance
+        Role readerRole = roleRepository.findByName("READER")
+                .orElseGet(() -> {
+                    log.warn("READER role not found, creating it");
+                    Role newRole = new Role();
+                    newRole.setName("READER");
+                    return roleRepository.save(newRole);
+                });
+        
+        log.debug("Adding READER role (id: {}) to user", readerRole.getId());
         user.getRoles().add(readerRole);
 
+        log.debug("Saving new user to database");
         User savedUser = userRepository.save(user);
+        log.info("User registered successfully with ID: {}", savedUser.getId());
 
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("userId", savedUser.getId());
