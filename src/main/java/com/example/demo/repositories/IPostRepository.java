@@ -42,11 +42,16 @@ public interface IPostRepository extends JpaRepository<Post, Integer> {
 
     Page<Post> findByStatusOrderByPublishedAtDesc(PostStatus status, Pageable pageable);
 
-    @Query("SELECT p.category.name, COUNT(p) FROM Post p WHERE p.status = 'PUBLISHED' GROUP BY p.category")
-    List<Object[]> countPostsByCategory();
-
     // Admin functionality
     Long countByStatus(PostStatus status);
+
+    // POPRAVLJENA METODA ZA CATEGORY STATS
+    @Query("SELECT c.name, COUNT(p) FROM Post p " +
+            "RIGHT JOIN p.category c " +
+            "WHERE p.status = 'PUBLISHED' OR p.status IS NULL " +
+            "GROUP BY c.id, c.name " +
+            "ORDER BY COUNT(p) DESC")
+    List<Object[]> countPostsByCategory();
 
     @Query("SELECT p FROM Post p JOIN p.author a WHERE " +
             "LOWER(a.firstName) LIKE LOWER(CONCAT('%', :authorName, '%')) OR " +

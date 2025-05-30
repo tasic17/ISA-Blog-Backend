@@ -11,9 +11,14 @@ public interface IUserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
     Boolean existsByEmail(String email);
 
-    // Admin search functionality
-    List<User> findByEmailContainingOrFirstNameContainingOrLastNameContaining(
-            String email, String firstName, String lastName);
+    // Admin search functionality - POPRAVKA
+    @Query("SELECT u FROM User u WHERE " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))")
+    List<User> findByEmailContainingOrFirstNameContainingOrLastNameContaining(@Param("search") String search,
+                                                                              @Param("search") String firstName,
+                                                                              @Param("search") String lastName);
 
     // Statistics queries
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")

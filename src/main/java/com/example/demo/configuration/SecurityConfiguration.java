@@ -35,6 +35,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests()
                 // Javno dostupne rute
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/test/**").permitAll() // Za debug
 
                 // Javno dostupne API rute za blog
                 .requestMatchers(
@@ -50,6 +51,12 @@ public class SecurityConfiguration {
                         "/api/tags",
                         "/api/tags/{id}"
                 ).permitAll()
+
+                // Admin rute - zahtevaju ADMIN ulogu
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // User profile rute - zahtevaju autentifikaciju
+                .requestMatchers("/api/users/**").authenticated()
 
                 // Sve ostalo zahteva autentifikaciju
                 .anyRequest()
