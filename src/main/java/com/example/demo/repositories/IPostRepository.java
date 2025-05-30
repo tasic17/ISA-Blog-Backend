@@ -26,6 +26,11 @@ public interface IPostRepository extends JpaRepository<Post, Integer> {
 
     Optional<Post> findBySlug(String slug);
 
+    // NOVE METODE ZA PROVERU POSTOJANJA
+    boolean existsBySlug(String slug);
+
+    boolean existsByTitle(String title);
+
     @Query("SELECT p FROM Post p WHERE p.status = :status AND " +
             "(LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(p.content) LIKE LOWER(CONCAT('%', :search, '%')))")
@@ -45,7 +50,6 @@ public interface IPostRepository extends JpaRepository<Post, Integer> {
     // Admin functionality
     Long countByStatus(PostStatus status);
 
-    // POPRAVLJENA METODA ZA CATEGORY STATS
     @Query("SELECT c.name, COUNT(p) FROM Post p " +
             "RIGHT JOIN p.category c " +
             "WHERE p.status = 'PUBLISHED' OR p.status IS NULL " +
